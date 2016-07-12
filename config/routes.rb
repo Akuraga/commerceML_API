@@ -4,4 +4,5 @@ Rails.application.routes.draw do
   root 'parsexml#index'
   get '/parsexml/show'
   get '1c_exchange.php' => 'parsexml#exchange_1c', action: :exchange_1c
+  get '/bitrix/admin/1c_exchange.php' => 'parsexml#exchange_1c', action: :exchange_1c
 end

@@ -1,16 +1,17 @@
 module ToErpOrder
 
 
-  def create_to_erp_order(commerce_infor)
+  def create_order_to_erp
+    commerce_info = CommerceInformation.find_by(name_document: "from_ERP_order")#, to_erp: false) #заменить на "from_site_order" когда будем рельно парсить информацию с сайта
 
     @doc = Nokogiri::XML('to.xml')
 
     node_commerce_inf = Nokogiri::XML::Node.new('КоммерческаяИнформация', @doc)
-    node_commerce_inf['ВерсияСхемы'] = commerce_infor.version
-    node_commerce_inf['ДатаФормирования'] = commerce_infor.date
+    node_commerce_inf['ВерсияСхемы'] = commerce_info.version
+    node_commerce_inf['ДатаФормирования'] = commerce_info.date
     @doc.root = node_commerce_inf
 
-    commerce_infor.documents.each do |document|
+    commerce_info.documents.each do |document|
 
       node_document = Nokogiri::XML::Node.new('Документ', @doc)
       node_commerce_inf.add_child node_document
@@ -100,6 +101,8 @@ module ToErpOrder
         add_requisites(document.requisites, node_document, document)
       end
     end
+    commerce_info.to_erp = true
+    commerce_info.save!
     return @doc
   end
 
