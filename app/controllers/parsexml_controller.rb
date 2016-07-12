@@ -70,7 +70,7 @@ class ParsexmlController < ApplicationController
     zip = 'no'
     file_limit = 52428800
 
-
+    asd = params[:user]
 
     type      = params[:type]
     mode      = params[:mode]
@@ -103,6 +103,7 @@ class ParsexmlController < ApplicationController
 
   private
     def first_response(cookie, cookie_value)
+      #authenticity_token"=>"Ilz9+29frztKUStYqtgPCQOAfG9g5cYCmPCDisuo+Gs="
       render html: "success\n#{cookie}\n#{cookie_value}\n"
       #render text: "success\n"
     end
