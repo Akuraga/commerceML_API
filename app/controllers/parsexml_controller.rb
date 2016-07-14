@@ -7,62 +7,16 @@ class ParsexmlController < ApplicationController
   include OffersParser
   include OrderParser
   include ToErpOrder
+  include ToSite
+
+  require 'rest-client'
 
   def index
-    # file_xml = './data/from_ERP/import.xml'
-    # file_offers = './data/from_ERP/offers.xml'
-    # file_order = './data/from_ERP/orders.xml'
-    #
-    # parser_product_from_erp(file_xml)
-    # parser_offers_from_erp(file_offers)
-    # parse_order_from_erp(file_order)
 
-    #create_order_to_erp
   end
 
 
   def exchange_1c
-    # http://v8.1c.ru/edi/edi_stnd/131/#2
-    # A. Начало сеанса
-      #
-      # Выгрузка данных начинается с того, что система "1С:Предприятие" отправляет http-запрос следующего вида:
-      # http://<сайт>/<путь> /1c_exchange.php?type=sale&mode=checkauth.
-      # В ответ система управления сайтом передает системе «1С:Предприятие» три строки (используется разделитель строк "\n"):
-      # слово "success";
-      # имя Cookie;
-      # значение Cookie.
-      # Примечание. Все последующие запросы к системе управления сайтом со стороны "1С:Предприятия" содержат в заголовке запроса имя и значение Cookie.
-
-    # B. Уточнение параметров сеанса
-      #
-      # Далее следует запрос следующего вида:
-      # http://<сайт>/<путь> /1c_exchange.php?type=sale&mode=init
-      #
-      # В ответ система управления сайтом передает две строки:
-      # 1. zip=yes, если сервер поддерживает обмен в zip-формате -  в этом случае на следующем шаге файлы должны быть упакованы в zip-формате
-      # или
-      # zip=no - в этом случае на следующем шаге файлы не упаковываются и передаются каждый по отдельности.
-      # 2. file_limit=<число>, где <число> - максимально допустимый размер файла в байтах для передачи за один запрос. Если системе "1С:Предприятие" понадобится передать файл большего размера, его следует разделить на фрагменты.
-
-    # C. Получение файла обмена с сайта (от системы)
-      #
-      # Затем на сайт отправляется запрос вида
-      # http://<сайт>/<путь> /1c_exchange.php?type=sale&mode=query.
-      # Сайт передает сведения о заказах в формате CommerceML 2. В случае успешного получения и записи заказов "1С:Предприятие" передает на сайт запрос вида
-      # http://<сайт>/<путь> /1c_exchange.php?type=sale&mode=success
-
-    # D. Отправка файла обмена на сайт
-    # Затем система "1С:Предприятие" отправляет на сайт запрос вида
-    # http://<сайт>/<путь> /1c_exchange.php?type=sale&mode=file&filename=<имя файла>,
-    # который загружает на сервер файл обмена, посылая содержимое файла в виде POST.
-    # В случае успешной записи файла система управления сайтом передает строку со словом "success". Дополнительно на следующих строчках могут содержаться замечания по загрузке.
-    # Примечание. Если в ходе какого-либо запроса произошла ошибка, то в первой строке ответа системы управления сайтом будет содержаться слово "failure", а в следующих строках - описание ошибки, произошедшей в процессе обработки запроса.
-    # Если произошла необрабатываемая ошибка уровня ядра продукта или sql-запроса, то будет возвращен html-код.
-
-
-
-
-
 
     # константы ответа 1С
     cookie = 'NAME'
@@ -70,11 +24,52 @@ class ParsexmlController < ApplicationController
     zip = 'no'
     file_limit = 52428800
 
-    asd = params[:user]
 
     type      = params[:type]
     mode      = params[:mode]
     file_name =  params[:filename]
+
+
+    #проверка связи
+    if type == 'catalog' and mode == 'checkauth'
+      first_response(cookie, cookie_value)
+    end
+
+    # инициализация настроек
+    if type == 'catalog' and mode == 'init'
+      second_response(zip, file_limit)
+    end
+
+    #сохраняем файлы каталогов полученые от сервера
+    if type == 'catalog' and mode == 'file'
+      # import_file = File.new("./data/from_ERP/#{file_name}", "w")
+      # file = params[:content]
+
+      # uploaded_io = params[:filename]
+      # # import_file.write(uploaded_io.read)
+      #
+      # if uploaded_io != nil
+      #   File.open(Rails.root.join('public', 'uploads', "#{file_name}"), 'wb') do |file|
+      #     file.write(uploaded_io.read)
+      #   end
+      # end
+
+      render text: "success"
+      #parser_product_from_erp(file_name)
+    end
+
+    #обрабатываем файлы полученые от сервера
+    if type == 'catalog' and mode == 'import'
+      if file_name == "import.xml" #обработать иморт если фал не один
+        #parser_product_from_erp(file_name)
+      elsif file_name == "offers.xml"
+        parser_offers_from_erp(file_name)
+      end
+
+      render text: "success"
+    end
+
+
 
     if type == 'sale' and mode == 'checkauth'
       first_response(cookie, cookie_value)
@@ -84,28 +79,28 @@ class ParsexmlController < ApplicationController
       second_response(zip, file_limit)
     end
 
+    #создание файла с заказами и отправка его 1С
     if type == 'sale' and mode == 'query'
       send_order_to_erp
     end
 
     #обработка входящего файла с заказами от 1С
       if type == 'sale' and mode == 'file'
-        parse_order_from_erp(file_name)
-        render text: "success"
+         parse_order_from_erp(file_name)
+         render plain: "success"
       end
 
 
     #подтверждение, от 1С, успешного приема файла с заказами
       if type == 'sale' and mode == 'success'
+        a=2
       end
 
   end
 
   private
     def first_response(cookie, cookie_value)
-      #authenticity_token"=>"Ilz9+29frztKUStYqtgPCQOAfG9g5cYCmPCDisuo+Gs="
-      render html: "success\n#{cookie}\n#{cookie_value}\n"
-      #render text: "success\n"
+      render plain: "success"
     end
 
     def second_response(zip, file_limit)
@@ -113,7 +108,14 @@ class ParsexmlController < ApplicationController
     end
 
     def send_order_to_erp
-      render xml: create_order_to_erp
+       file = "./data/to_ERP/to_erp.xml"
+      # order =  create_order_to_erp
+      # to_erp = File.new(file, "w")
+      # File.write(to_erp, order.to_xml(:encoding => "UTF-8"))
+
+      RestClient.post("192.168.1.36:1560",
+                      {:upload => {:file => File.new(file, 'rb')}
+                      })
     end
 
 

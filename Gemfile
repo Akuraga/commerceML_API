@@ -1,6 +1,9 @@
 source 'https://rubygems.org'
 gem 'nokogiri'
 gem 'slim'
+gem 'rest-client'
+gem 'csv-mapper'
+
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.0.0'
