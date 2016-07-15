@@ -11,4 +11,5 @@ Rails.application.routes.draw do
 
   get 'site_to_erp' => 'create_csv#csv_site_to_erp'
   get 'erp_to_site' => 'create_csv#csv_erp_to_site'
+  get 'parse_my_doc' => 'parsexml#parse_my_doc'
 end

@@ -4,7 +4,7 @@ class CreateCsvController < ApplicationController
 
 
   #парсим данные с сайта
-  def csv_site_to_erp
+  def csv_site_to_erp #url: site_to_erp
     file_products = './data/from_site/catalog_product.csv'
     file_orders = './data/from_site/orders.csv'
     file_customers = './data/from_site/customers.csv'
@@ -16,7 +16,7 @@ class CreateCsvController < ApplicationController
 
 
 
-  def csv_erp_to_site
+  def csv_erp_to_site #url: erp_to_site
     file_products = './data/to_site/catalog_product.csv'
     file_orders = './data/to_site/orders.csv'
     file_customers = './data/to_site/customers.csv'

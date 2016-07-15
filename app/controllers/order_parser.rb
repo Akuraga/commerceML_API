@@ -22,9 +22,7 @@ module OrderParser
 
       if order.at_css('ЗначенияРеквизитов')
         Nokogiri::XML::SAX::Parser.new(ParserDocument.new).parse(order.to_xml)
-        #parse_document_requisite(order.css('ЗначенияРеквизитов'))
       end
-
 
       if order.at_css('Контрагенты')
         parse_contractor(order.css('Контрагенты'))

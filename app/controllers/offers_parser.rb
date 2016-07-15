@@ -95,7 +95,7 @@ module OffersParser
         @new_proposal          = Proposal.new
         @new_proposal.quantity = proposal.at_css('Количество').text
         product                = Product.find_by(id_xml: proposal.at_css('Ид').text)
-        product.proposals << @new_proposal
+        product.proposal << @new_proposal
 
         if proposal.css('Цены')
           parse_price(proposal.css('Цены'))

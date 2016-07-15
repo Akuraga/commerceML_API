@@ -31,13 +31,118 @@ module CatalogParser
         prod = Product.find_by(barcode: product.at_css('Штрихкод').text)
       end
 
-      if product.at_css('Ид').text == 'ORDER_DELIVERY'
-        a=2
+      if product.at_css('Ид') and product.at_css('Артикул')
+        prod = Product.find_by(id_xml: product.at_css('Ид').text, vendorcode: product.at_css('Артикул').text)
+      elsif product.at_css('Артикул') and product.at_css('Штрихкод')
+        prod = Product.find_by(vendorcode: product.at_css('Артикул').text, barcode: product.at_css('Штрихкод').text)
+      elsif product.at_css('Штрихкод') and product.at_css('Ид')
+        prod = Product.find_by(barcode: product.at_css('Штрихкод').text, id_xml: product.at_css('Ид').text)
       end
+
+      if product.at_css('Ид') and product.at_css('Артикул') and product.at_css('Штрихкод')
+        prod = Product.find_by(id_xml: product.at_css('Ид').text, vendorcode: product.at_css('Артикул').text,
+                               barcode: product.at_css('Штрихкод').text)
+      end
+
 
       if prod
         #товар знайдено у базі
-        if document.class == Document
+        #   сравнивать поля и если изменились - обновить
+        if document.class != Document
+
+          #обновляем информацию о товаре если она изменилась
+          if product.at_css('Ид')
+            unless prod.id_xml == product.at_css('Ид').text
+              prod.id_xml = product.at_css('Ид').text
+            end
+          end
+          if product.at_css('Артикул')
+            unless prod.vendorcode == product.at_css('Артикул').text
+              prod.vendorcode = product.at_css('Артикул').text
+            end
+          end
+          if product.at_css('Штрихкод')
+            unless prod.barcode == product.at_css('Штрихкод').text
+              prod.barcode = product.at_css('Штрихкод').text
+            end
+          end
+          if product.at_css('Описание')
+            unless prod.description == product.at_css('Описание').text
+              prod.description = product.at_css('Описание').text
+            end
+          end
+          if product.at_css('Картинка')
+            if prod.product_images.count != product.css('Картинка').count
+              prod.product_images.destroy
+              product.css('Картинка').count.times do |i|
+                new_image = ProductImage.new
+                new_image.link_image = product.css('Картинка')[i].text
+                @new_product.product_images << new_image
+                new_image.save!
+              end
+            else
+              i=-1
+              prod.product_images.each do |prod_image|
+                i +=1
+                prod_image.link_image = product.css('Картинка')[i].text
+              end
+            end
+          end
+          if product.at_css('Наименование')
+            unless prod.name == product.at_css('Наименование').text
+              prod.name = product.at_css('Наименование').text
+            end
+          end
+
+          #парсим ед. изм
+          if product.at_css('Наименование')
+            unless prod.name == product.at_css('Наименование').text
+              prod.name = product.at_css('Наименование').text
+            end
+          end
+
+          if product.at_css('БазоваяЕдиница')
+            unless prod.unit == parse_unit(product.at_css('БазоваяЕдиница'))
+              unit = parse_unit(product.at_css('БазоваяЕдиница'))
+              unit.products << prod
+            end
+          end
+
+          if product.at_css('Группы')
+            prod.groups.destroy
+            product.css('Группы Ид').each do |group|
+              prod_group = Group.find_by(id_xml: group.text)
+              if prod_group
+                prod.groups << prod_group
+              end
+            end
+          end
+
+          #парсим свойства товара
+          if product.at_css('ЗначенияСвойств')
+            prod.product_properties.destroy
+            parse_product_property(product.css('ЗначенияСвойств'))
+          end
+
+          #парсим СтавкиНалогов товара
+          if product.at_css('СтавкиНалогов')
+            prod.product_tax_values.destroy
+            parse_taxes(product.css('СтавкиНалогов'), @new_product)
+          end
+
+          #парсим ХарактеристикиТовара товара
+          if product.at_css('ХарактеристикиТовара')
+            prod.product_attribute_values.destroy
+            parse_attributes(product.css('ХарактеристикиТовара'), @new_product)
+          end
+
+          #парсим ЗначенияРеквизитов товара
+          if product.at_css('ЗначенияРеквизитов')
+            prod.product_requisites.destroy
+            parse_requisite(product.css('ЗначенияРеквизитов'), @new_product)
+          end
+
+        else #если документ класс = документ (из orders)
           if product.at_css('Налоги')
             parse_order_tax(prod, product.css('Налоги'))
           end
@@ -62,7 +167,12 @@ module CatalogParser
           @new_document_product.save!
 
           parse_discount(prod, product.css('Скидки'), document)
+
+
         end
+
+        prod.save!
+
       else
         @new_product = Product.new
         if product.at_css('Ид')
@@ -73,6 +183,9 @@ module CatalogParser
         end
         if product.at_css('Штрихкод')
           @new_product.barcode    = product.at_css('Штрихкод').text
+        end
+        if product.at_css('Описание')
+          @new_product.description    = product.at_css('Описание').text
         end
         if product.at_css('Картинка')
           product.css('Картинка').count.times do |i|
@@ -97,8 +210,10 @@ module CatalogParser
             end
           end
         end
-        if @new_catalog
-          @new_catalog.products << @new_product
+        if document.class != Document
+          if @new_catalog
+            @new_catalog.products << @new_product
+          end
         end
 
         #парсим свойства товара
@@ -110,11 +225,6 @@ module CatalogParser
           if product.at_css('СтавкиНалогов')
             parse_taxes(product.css('СтавкиНалогов'), @new_product)
           end
-
-        # #парсим Налоги товара (из заказа)
-        #   if product.at_css('Налоги')
-        #     parse_order_tax(@new_product, product.css('Налоги'))
-        #   end
 
         #парсим ХарактеристикиТовара товара
           if product.at_css('ХарактеристикиТовара')

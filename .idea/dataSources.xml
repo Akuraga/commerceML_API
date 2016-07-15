@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" hash="235967965">
+    <data-source source="LOCAL" name="PostgreSQL - commerceMLAPI_development@localhost" uuid="05b49f51-cb1b-4a52-b9ec-1ac9e548b0c6">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/commerceMLAPI_development</jdbc-url>
+    </data-source>
+  </component>
+</project>

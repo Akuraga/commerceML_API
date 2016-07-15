@@ -31,42 +31,135 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
 
   def export_products(file)
 
-    h = "sku;store_view_code;attribute_set_code;product_type;categories;product_websites;name;description;short_description;weight;product_online;tax_class_name;
-visibility;price;special_price;special_price_from_date;special_price_to_date;url_key;meta_title;meta_keywords;meta_description;base_image;
-base_image_label;small_image;small_image_label;thumbnail_image;thumbnail_image_label;swatch_image;swatch_image_label;created_at;updated_at;
-new_from_date;new_to_date;display_product_options_in;map_price;msrp_price;map_enabled;gift_message_available;custom_design;custom_design_from;
-custom_design_to;custom_layout_update;page_layout;product_options_container;msrp_display_actual_price_type;country_of_manufacture;additional_attributes;qty;
-out_of_stock_qty;use_config_min_qty;is_qty_decimal;allow_backorders;use_config_backorders;min_cart_qty;use_config_min_sale_qty;max_cart_qty;
-use_config_max_sale_qty;is_in_stock;notify_on_stock_below;use_config_notify_stock_qty;manage_stock;use_config_manage_stock;use_config_qty_increments;
-qty_increments;use_config_enable_qty_inc;enable_qty_increments;is_decimal_divided;website_id;related_skus;crosssell_skus;upsell_skus;
-additional_images;additional_image_labels;hide_from_product_page;custom_options;bundle_price_type;bundle_sku_type;bundle_price_view;bundle_weight_type;
-bundle_values;associated_skus"
-    
-    h = h.gsub("\n","").split(';')
-    products = Magento2CatalogProduct.all
-    CSV.open(file, 'w', :encoding => "UTF-8") do |writer|
-       writer << [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15],
-                  h[16], h[17], h[18], h[19], h[20], h[21], h[22], h[23], h[24], h[25], h[26], h[27], h[28], h[29],
-                  h[30], h[31], h[32], h[33], h[34], h[35], h[36], h[37], h[38], h[39], h[40], h[41], h[42], h[43],
-                  h[44], h[45], h[46], h[47], h[48], h[49], h[50], h[51], h[52], h[53], h[54], h[55], h[56], h[57],
-                  h[58], h[59], h[60], h[61], h[62], h[63], h[64], h[65], h[66], h[67], h[68], h[69], h[70], h[71],
-                  h[72], h[73], h[74], h[75], h[76], h[77], h[78], h[79], h[80]]
-       products.each do |p|
-        writer << [p.sku, p.store_view_code, p.attribute_set_code, p.product_type, p.categories, p.product_websites,
-                   p.name, p.description, p.short_description, p.weight, p.product_online, p.tax_class_name, p.visibility,
-                   p.price, p.special_price, p.special_price_from_date, p.special_price_to_date, p.url_key, p.meta_title,
-                   p.meta_keywords, p.meta_description, p.base_image, p.base_image_label, p.small_image, p.small_image_label,
-                   p.thumbnail_image, p.thumbnail_image_label, p.swatch_image, p.swatch_image_label, p.created_at,
-                   p.updated_at, p.new_from_date, p.new_to_date, p.display_product_options_in, p.map_price, p.msrp_price,
-                   p.map_enabled, p.gift_message_available, p.custom_design, p.custom_design_from, p.custom_design_to,
-                   p.custom_layout_update, p.page_layout, p.product_options_container, p.msrp_display_actual_price_type,
-                   p.country_of_manufacture, p.additional_attributes, p.qty, p.out_of_stock_qty, p.use_config_min_qty,
-                   p.is_qty_decimal, p.allow_backorders, p.use_config_backorders, p.min_cart_qty, p.use_config_min_sale_qty,
-                   p.max_cart_qty, p.use_config_max_sale_qty, p.is_in_stock, p.notify_on_stock_below, p.use_config_notify_stock_qty,
-                   p.manage_stock, p.use_config_manage_stock, p.use_config_qty_increments, p.qty_increments, p.use_config_enable_qty_inc,
-                   p.enable_qty_increments, p.is_decimal_divided, p.website_id, p.related_skus, p.crosssell_skus, p.upsell_skus,
-                   p.additional_images, p.additional_image_labels, p.hide_from_product_page, p.custom_options, p.bundle_price_type,
-                   p.bundle_sku_type, p.bundle_price_view, p.bundle_weight_type, p.bundle_values, p.associated_skus]
+    # products = Magento2CatalogProduct.all
+    # CSV.open(file, 'w', :encoding => "UTF-8") do |writer|
+    #    writer << [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15],
+    #               h[16], h[17], h[18], h[19], h[20], h[21], h[22], h[23], h[24], h[25], h[26], h[27], h[28], h[29],
+    #               h[30], h[31], h[32], h[33], h[34], h[35], h[36], h[37], h[38], h[39], h[40], h[41], h[42], h[43],
+    #               h[44], h[45], h[46], h[47], h[48], h[49], h[50], h[51], h[52], h[53], h[54], h[55], h[56], h[57],
+    #               h[58], h[59], h[60], h[61], h[62], h[63], h[64], h[65], h[66], h[67], h[68], h[69], h[70], h[71],
+    #               h[72], h[73], h[74], h[75], h[76], h[77], h[78], h[79], h[80]]
+    #    products.each do |p|
+    #     writer << [p.sku, p.store_view_code, p.attribute_set_code, p.product_type, p.categories, p.product_websites,
+    #                p.name, p.description, p.short_description, p.weight, p.product_online, p.tax_class_name, p.visibility,
+    #                p.price, p.special_price, p.special_price_from_date, p.special_price_to_date, p.url_key, p.meta_title,
+    #                p.meta_keywords, p.meta_description, p.base_image, p.base_image_label, p.small_image, p.small_image_label,
+    #                p.thumbnail_image, p.thumbnail_image_label, p.swatch_image, p.swatch_image_label, p.created_at,
+    #                p.updated_at, p.new_from_date, p.new_to_date, p.display_product_options_in, p.map_price, p.msrp_price,
+    #                p.map_enabled, p.gift_message_available, p.custom_design, p.custom_design_from, p.custom_design_to,
+    #                p.custom_layout_update, p.page_layout, p.product_options_container, p.msrp_display_actual_price_type,
+    #                p.country_of_manufacture, p.additional_attributes, p.qty, p.out_of_stock_qty, p.use_config_min_qty,
+    #                p.is_qty_decimal, p.allow_backorders, p.use_config_backorders, p.min_cart_qty, p.use_config_min_sale_qty,
+    #                p.max_cart_qty, p.use_config_max_sale_qty, p.is_in_stock, p.notify_on_stock_below, p.use_config_notify_stock_qty,
+    #                p.manage_stock, p.use_config_manage_stock, p.use_config_qty_increments, p.qty_increments, p.use_config_enable_qty_inc,
+    #                p.enable_qty_increments, p.is_decimal_divided, p.website_id, p.related_skus, p.crosssell_skus, p.upsell_skus,
+    #                p.additional_images, p.additional_image_labels, p.hide_from_product_page, p.custom_options, p.bundle_price_type,
+    #                p.bundle_sku_type, p.bundle_price_view, p.bundle_weight_type, p.bundle_values, p.associated_skus]
+    #   end
+    # end
+    # go = true
+    @category = Array.new
+    @price = Array.new
+    @quantity = Array.new
+    i = -1
+    j = -1
+    commerce_information = CommerceInformation.find_by(name_document: "from_ERP_import", from_erp: true)
+    commerce_information.catalogs.each do |catalog|
+      catalog.products.each do |p|
+
+        #получаем Ціни інтернет-магазину  id_xml: 5590c751-e4c0-11e2-9526-00163c2d0dbf
+        j += 1
+        proposal = p.proposal
+        if proposal
+          if p.proposal.quantity.to_i >= 0
+            @quantity[j] = p.proposal.quantity
+          else
+            @quantity[j] = "0"
+          end
+        else
+          @quantity[j] = "0"
+        end
+
+        price_type = PriceType.find_by(id_xml:"5590c751-e4c0-11e2-9526-00163c2d0dbf")
+        if proposal and price_type
+          @price[j] = Price.find_by(proposal_id: proposal.id, price_type_id: price_type.id).price
+        else
+          @price[j] = "0"
+        end
+
+
+
+
+        #получаем категории товара
+        i += 1
+        go = true
+        p.groups.each do |g|
+          if @category[i].to_s != ""
+            @category[i] = "," + "#{@category[i]}"
+          end
+          @category[i] = "#{g.name}"
+          if g.groupable_type == "Group"
+            parent_group = Group.find(g.groupable_id)
+            @category[i] = "#{parent_group.name}" + "/" + "#{@category[i]}"
+            while go do
+              if parent_group.groupable_type == "Classifier"
+                go = false
+              else
+                parent_group = Group.find(parent_group.groupable_id)
+                @category[i] = "#{parent_group.name}" + "/" + "#{@category[i]}"
+              end
+            end
+          end
+        end
+      end
+    end
+    #5590c751-e4c0-11e2-9526-00163c2d0dbf Ціни інтернет-магазину
+
+    h = "sku; store_view_code; attribute_set_code; product_type; categories; product_websites; name; description; short_description; weight; product_online; tax_class_name;
+ visibility; price; special_price; special_price_from_date; special_price_to_date; url_key; meta_title; meta_keywords; meta_description; base_image;
+ base_image_label; small_image; small_image_label; thumbnail_image; thumbnail_image_label; swatch_image; swatch_image_label; created_at; updated_at;
+ new_from_date; new_to_date; display_product_options_in; map_price; msrp_price; map_enabled; gift_message_available; custom_design; custom_design_from;
+ custom_design_to; custom_layout_update; page_layout; product_options_container; msrp_display_actual_price_type; country_of_manufacture; additional_attributes; qty;
+ out_of_stock_qty; use_config_min_qty; is_qty_decimal; allow_backorders; use_config_backorders; min_cart_qty; use_config_min_sale_qty; max_cart_qty;
+ use_config_max_sale_qty; is_in_stock; notify_on_stock_below; use_config_notify_stock_qty; manage_stock; use_config_manage_stock; use_config_qty_increments;
+ qty_increments; use_config_enable_qty_inc; enable_qty_increments; is_decimal_divided; website_id; related_skus; crosssell_skus; upsell_skus;
+ additional_images; additional_image_labels; hide_from_product_page; custom_options; bundle_price_type; bundle_sku_type; bundle_price_view; bundle_weight_type;
+ bundle_values; associated_skus"
+
+    h = h.gsub("\n","").split('; ')
+
+    i = -1
+    CSV.open( file, 'w') do |writer|
+      writer << [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15],
+                 h[16], h[17], h[18], h[19], h[20], h[21], h[22], h[23], h[24], h[25], h[26], h[27], h[28], h[29],
+                 h[30], h[31], h[32], h[33], h[34], h[35], h[36], h[37], h[38], h[39], h[40], h[41], h[42], h[43],
+                 h[44], h[45], h[46], h[47], h[48], h[49], h[50], h[51], h[52], h[53], h[54], h[55], h[56], h[57],
+                 h[58], h[59], h[60], h[61], h[62], h[63], h[64], h[65], h[66], h[67], h[68], h[69], h[70], h[71],
+                 h[72], h[73], h[74], h[75], h[76], h[77], h[78], h[79], h[80]]
+      #проверить наличие нескольких каталогов в одной файле
+      commerce_information.catalogs.each do |catalog|
+        catalog.products.each do |p|
+          i += 1
+          requisite = Requisite.find_by(name: 'Вес')
+          if requisite
+            product_weight = ProductRequisite.find_by(product_id: p.id, requisite_id: requisite.id)
+            if product_weight
+              product_weight = product_weight.value
+            end
+          end                                         #@category[i]
+          if p.id_xml != "7941" and p.id_xml != "7959"
+            writer << [p.id_xml, "", "Default", "simple", "", "base", p.name, p.description, "", product_weight, #10
+                       "1", "", "Catalog, Search", @price[i], "", "", "", "", "", "", "", "#{p.product_images.first.link_image}", "", "", "", "", "", "", "", p.created_at, #30
+                       p.updated_at, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", @quantity[i], "", "", #50
+                       "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", #70
+                       "", "", "", "", "", "", "", "", "", "", ""] #81
+          end
+
+
+          #Catalog, Search
+          # writer << [p.id_xml, p.name, "2", @category[i], p.description, "",
+          #            product_weight, "Taxable Goods", "", "", "simple"]
+        end
       end
     end
   end

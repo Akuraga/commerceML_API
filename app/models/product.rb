@@ -6,7 +6,7 @@ class Product < ApplicationRecord
   has_and_belongs_to_many :groups
 
   #properties
-  has_many :product_properties
+  has_many :product_properties, dependent: :destroy
   has_many :properties, through: :product_properties
 
   #tax
@@ -21,17 +21,22 @@ class Product < ApplicationRecord
   has_many :product_attribute_values
   has_many :product_attributes, through: :product_attribute_values
 
-  has_many :proposals
-  has_many :product_images
+  #proposal
+  has_one :proposal
+
+  #images
+  has_many :product_images, dependent: :destroy
+
+  #handbooks
   has_and_belongs_to_many :handbooks
 
   #documents (order)
   has_many :documents_products
   has_many :documents, through: :documents_products
 
-  has_many :order_tax_values
+  has_many :order_tax_values, dependent: :destroy
   has_many :taxes, through: :order_tax_values
 
   #discounts
-  has_many :discounts
+  has_many :discounts, dependent: :destroy
 end
