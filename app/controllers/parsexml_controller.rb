@@ -138,7 +138,7 @@ class ParsexmlController < ApplicationController
       # to_erp = File.new(file, "w")
       # File.write(to_erp, order.to_xml(:encoding => "UTF-8"))
 
-      RestClient.post(request.remote_ip,
+      RestClient.post("#{request.remote_ip}" + "#{request.port_string}",
                       {:upload => {:file => File.new(file, 'rb')}
                       })
     end
