@@ -8,6 +8,10 @@ class ParsexmlController < ApplicationController
   include OrderParser
   include ToErpOrder
   include ToSite
+  require 'net/http'
+
+
+
 
   require 'rest-client'
   def parse_my_doc
@@ -19,25 +23,6 @@ class ParsexmlController < ApplicationController
     parse_order_from_erp(file_name3)
     render text: "ok"
   end
-
-  def exchange_1cpost
-    a=2
-    # import_file = File.new("./data/from_ERP/#{file_name}", "w")
-    # file = params[:content]
-
-    # uploaded_io = params[:filename]
-    # # import_file.write(uploaded_io.read)
-    #
-    # if uploaded_io != nil
-    #   File.open(Rails.root.join('public', 'uploads', "#{file_name}"), 'wb') do |file|
-    #     file.write(uploaded_io.read)
-    #   end
-    # end
-
-    render text: "success"
-  end
-
-
 
 
   def exchange_1c
@@ -66,32 +51,35 @@ class ParsexmlController < ApplicationController
 
     #сохраняем файлы каталогов полученые от сервера
     if type == 'catalog' and mode == 'file'
+      file_path = "./data/from_ERP/"
+      if file_name.split('/')[0] == 'import_files'
+        Dir.mkdir("#{file_path}#{file_name.split('/')[0]}")
+        Dir.mkdir("#{file_path}#{file_name.split('/')[0]}/#{file_name.split('/')[1]}")
+      end
+      File.new("#{file_path}#{file_name}", "w")
+      uploaded_io = request.body
 
-      # import_file = File.new("./data/from_ERP/#{file_name}", "w")
-      # file = params[:content]
+      if uploaded_io != nil
+        File.open(Rails.root.join(file_path, file_name), 'wb') do |file|
+          file.write(uploaded_io.read)
+        end
+      else
+        render plain: "failure"
+      end
 
-      # uploaded_io = params[:filename]
-      # # import_file.write(uploaded_io.read)
-      #
-      # if uploaded_io != nil
-      #   File.open(Rails.root.join('public', 'uploads', "#{file_name}"), 'wb') do |file|
-      #     file.write(uploaded_io.read)
-      #   end
-      # end
+      render plain: "success"
 
-      render text: "success"
-      #parser_product_from_erp(file_name)
+
     end
 
     #обрабатываем файлы полученые от сервера
     if type == 'catalog' and mode == 'import'
-      if file_name == "import.xml" #обработать иморт если фал не один
-        #parser_product_from_erp(file_name)
-      elsif file_name == "offers.xml"
+      if file_name.scan('import').size > 0
+        parser_product_from_erp(file_name)
+      elsif file_name.scan('offers').size > 0
         parser_offers_from_erp(file_name)
       end
-
-      render text: "success"
+      render plain: "success"
     end
 
 
@@ -129,18 +117,23 @@ class ParsexmlController < ApplicationController
     end
 
     def second_response(zip, file_limit)
-      render text: "#{zip}\n#{file_limit}\n"
+      render plain: "#{zip}\n#{file_limit}"
     end
 
     def send_order_to_erp
-       file = "./data/to_ERP/to.xml"
-      # order =  create_order_to_erp
-      # to_erp = File.new(file, "w")
-      # File.write(to_erp, order.to_xml(:encoding => "UTF-8"))
+      # file = "./data/to_ERP/to.xml"
+      #
+      # # order =  create_order_to_erp
+      # # to_erp = File.new(file, "w")
+      # # File.write(to_erp, order.to_xml(:encoding => "UTF-8"))
+      #
+      # #url1 =  "http://#{request.remote_ip}#{request.port_string}/1c_exchange"
+      # url1 =  "http://#{request.remote_ip}"
+      #
+      #  #url1 =  "http://192.168.1.38:80/1c_exchange?type=sale&mode=file&filename=to.xml"
+      #  #RestClient.post(url1, :file => File.new(file))
 
-      RestClient.post("#{request.remote_ip}" + "#{request.port_string}",
-                      {:upload => {:file => File.new(file, 'rb')}
-                      })
+
     end
 
 
