@@ -22,7 +22,7 @@ class Product < ApplicationRecord
   has_many :product_attributes, through: :product_attribute_values
 
   #proposal
-  has_one :proposal
+  has_many :proposals
 
   #images
   has_many :product_images, dependent: :destroy

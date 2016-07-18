@@ -12,11 +12,11 @@ module CommercemlParser
     @new_commerce_information.from_erp = true
     @new_commerce_information.save!
 
-    if xml_doc.css('Классификатор')
+    if xml_doc.at_css('Классификатор')
       parse_classifier(xml_doc.css('Классификатор'), @new_commerce_information)
     end
 
-    if xml_doc.css('Каталог')
+    if xml_doc.at_css('Каталог')
       parse_catalog(xml_doc.css('Каталог'), @new_commerce_information)
     end
 
@@ -34,7 +34,7 @@ module CommercemlParser
     @new_commerce_information.from_erp = true
     @new_commerce_information.save!
 
-    if offers_doc.css('ПакетПредложений')
+    if offers_doc.at_css('ПакетПредложений')
       parse_offer(offers_doc, @new_commerce_information)
     end
   end
@@ -51,7 +51,7 @@ module CommercemlParser
     @new_commerce_information.from_erp = true
     @new_commerce_information.save!
 
-    if order_doc.css('Документ')
+    if order_doc.at_css('Документ')
       parse_order(order_doc, @new_commerce_information)
     end
   end

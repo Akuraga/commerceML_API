@@ -6,18 +6,18 @@ module ClassifierParser
     @new_classifier.id_xml      = classifier_doc.at_css('Ид').text
     @new_classifier.name        = classifier_doc.at_css('Наименование').text
     @new_classifier.only_change = classifier_doc.css('Классификатор')[0]['СодержитТолькоИзменения']
-    if classifier_doc.css('Владелец')
+    if classifier_doc.at_css('Владелец')
       parse_owner(classifier_doc.css('Владелец'))
     end
 
     @new_ownner.classifiers << @new_classifier
     commerce_information.classifiers << @new_classifier
 
-    if classifier_doc.css('Группы')
+    if classifier_doc.at_css('Группы')
       parse_group(classifier_doc.css('Группы'))
     end
 
-    if classifier_doc.css('Свойства')
+    if classifier_doc.at_css('Свойства')
       parse_property(classifier_doc.css('Свойства'))
     end
   end
@@ -44,7 +44,7 @@ module ClassifierParser
 
     @new_ownner.save!
 
-    if owner_doc.css('РасчетныеСчета')
+    if owner_doc.at_css('РасчетныеСчета')
       parse_payment_account(owner_doc.css('РасчетныеСчета'))
     end
     return @new_ownner
@@ -59,10 +59,10 @@ module ClassifierParser
     payment_accounts.each do |payment_account|
       @new_payment_account.payment_account = payment_account.at_css('НомерСчета').text
       @new_payment_account.save!
-      if payment_account.css('Банк')
+      if payment_account.at_css('Банк')
         parse_bank(payment_account.css('Банк'), false)
       end
-      if payment_account.css('БанкКорреспондент')
+      if payment_account.at_css('БанкКорреспондент')
         parse_bank(payment_account.css('БанкКорреспондент'), true)
       end
     end
@@ -78,7 +78,7 @@ module ClassifierParser
     @new_bank.name = bank.at_css('Наименование').text
     @new_bank.correspondent_account = bank.at_css('СчетКорреспондентский').text
     @new_bank.address = bank.at_css('Представление').text
-    if bank.css('Адрес АдресноеПоле').text != ""
+    if bank.at_css('Адрес АдресноеПоле')
       parse_address(@new_bank, bank.css('Адрес АдресноеПоле'))
     end
     @new_bank.bik = bank.at_css('БИК').text
@@ -101,9 +101,11 @@ module ClassifierParser
       @new_property.id_xml      = property.at_css('Ид').text
       @new_property.name        = property.at_css('Наименование').text
       @new_property.value       = property.at_css('ТипЗначений').text
-      @new_property.for_product = property.at_css('ДляТоваров').text
+      if property.at_css('ДляТоваров')
+        @new_property.for_product = property.at_css('ДляТоваров').text
+      end
       @new_classifier.properties << @new_property
-      if property.css('Справочник')
+      if property.at_css('Справочник')
         parser_handbook(property.css('Справочник'))
       end
     end

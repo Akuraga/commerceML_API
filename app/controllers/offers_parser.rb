@@ -2,8 +2,6 @@ module OffersParser
 
   def parse_offer(offer_doc, commerce_information)
     @new_offer = Offer.new
-    #@new_offer.schema_version = offer_doc.css('КоммерческаяИнформация')[0]['ВерсияСхемы']
-    #@new_offer.data           = offer_doc.css('КоммерческаяИнформация')[0]['ДатаФормирования']
     offer_doc                 = offer_doc.css('ПакетПредложений')
     @new_offer.only_change    = offer_doc.css('ПакетПредложений')[0]['СодержитТолькоИзменения']
     @new_offer.id_xml         = offer_doc.at_css('Ид').text
@@ -19,15 +17,15 @@ module OffersParser
     owner.offers << @new_offer
     commerce_information.offers << @new_offer
 
-    if offer_doc.css('ТипыЦен')
+    if offer_doc.at_css('ТипыЦен')
       parse_price_type(offer_doc.css('ТипыЦен'))
     end
 
-    if offer_doc.css('Склады')
+    if offer_doc.at_css('Склады')
       parse_storage(offer_doc.css('Склады'))
     end
 
-    if offer_doc.css('Предложения')
+    if offer_doc.at_css('Предложения')
       parse_proposal(offer_doc.css('Предложения'))
     end
 
@@ -94,14 +92,14 @@ module OffersParser
       if proposal.at_css('Ид')
         @new_proposal          = Proposal.new
         @new_proposal.quantity = proposal.at_css('Количество').text
-        product                = Product.find_by(id_xml: proposal.at_css('Ид').text)
-        product.proposal << @new_proposal
+        @new_proposal.save!
 
-        if proposal.css('Цены')
+
+        if proposal.at_css('Цены')
           parse_price(proposal.css('Цены'))
         end
 
-        if proposal.css('Склад')
+        if proposal.at_css('Склад')
           proposal.css('Склад').count.times do |i|
             storage = Storage.find_by(id_xml: proposal.css('Склад')[i]['ИдСклада'])
             proposal_storage          = ProposalsStorage.new
@@ -110,6 +108,8 @@ module OffersParser
             storage.proposals_storages << proposal_storage
           end
         end
+        product = Product.find_by(id_xml: proposal.at_css('Ид').text)
+        product.proposals << @new_proposal
       end
     end
   end
