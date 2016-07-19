@@ -9,29 +9,29 @@ class ApiMagentoController < ApplicationController
 
     end
 
-      #
-      # begin
-      #
-      #   req = RestClient.put "http://demo.beta.qpard.com/index.php/rest/V1/products/10090-White-XL#{i}",
-      #                         {
-      #                             "product":{
-      #                                 "sku": "10090-White-XL#{i}",
-      #                                 "name": "10090-White-XL#{i}",
-      #                                 "attribute_set_id": 4,
-      #                                 "price": i,
-      #                                 "status": 1,
-      #                                 "visibility": 1,
-      #                                 "type_id": "simple" }
-      #                         }.to_json,
-      #                         {
-      #                             :Authorization => "Bearer #{result.to_s.gsub('"','')}",
-      #                             :content_type => :json,
-      #                             :accept => :json
-      #                         }
-      # rescue => error
-      #   a=2
-      # end
-      #
+
+      begin
+
+        req = RestClient.put "http://demo.beta.qpard.com/index.php/rest/V1/products/10090-White-XL#{i}",
+                              {
+                                  "product":{
+
+                                      "name": "10090-White-XL",
+                                      "attribute_set_id": 4,
+                                      "price": i,
+                                      "status": 1,
+                                      "visibility": 1,
+                                      "type_id": "simple" }
+                              }.to_json,
+                              {
+                                  :Authorization => "Bearer #{result.to_s.gsub('"','')}",
+                                  :content_type => :json,
+                                  :accept => :json
+                              }
+      rescue => error
+        a=2
+      end
+
 
 
 
