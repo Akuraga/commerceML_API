@@ -141,18 +141,31 @@ class ParsexmlController < ApplicationController
 
     def send_order_to_erp
       # parse_order_from_erp(FILE_PATH_ORDER_FROM_ERP + "orders.xml")
-
+      to_erp = File.read('./data/from_ERP/orders.xml')
       order =  create_order_to_erp
       # "http://#{request.remote_ip}"
 
       # s = StringIO.new(to_erp.to_s)
       # RestClient.post "http://#{request.remote_ip}:8080/", s, :content_type => 'application/octet-stream'
       # RestClient.post "http://192.168.1.35:3001/1c_exchange", order.to_xml(:encoding => "UTF-8"), :content_type => 'application/octet-stream', timeout: 10
-      RestClient.post "http://192.168.1.38:8080", order.to_xml(:encoding => "UTF-8"), :content_type => 'application/octet-stream'
+      # RestClient.post '192.168.1.38:80', order.to_xml(:encoding => "UTF-8"), :content_type => :json, :accept => :json#'application/octet-stream'
+      begin
+        RestClient.post request.remote_ip, order.to_xml(:encoding => "UTF-8"), :content_type => 'application/atom+xml'
+      rescue => error
+      a=2
+      end
 
-
-      # RestClient.post "http://#{request.remote_ip}:80/", order.to_xml(:encoding => "UTF-8"), :content_type => 'application/octet-stream', timeout: 10
+      # site = RestClient::Resource.new('192.168.1.38', :headers => {
+      # :content_type => 'application/atom+xml',
+      # :'DataServiceVersion' => '3.0;NetFx',
+      # :'MaxDataServiceVersion' =>'3.0;NetFx',
+      # :'Accept' =>'application/atom+xml,application/xml',
+      # :'Authorization' => request.authorization,
+      # :'Accept-Charset' => request.accept_encoding,
+      # :'User-Agent' => request.user_agent,
+      # :'Host' => "#{request.host}"
+      # })
+      # site.post order.to_xml(:encoding => "UTF-8")
     end
-
 
 end
