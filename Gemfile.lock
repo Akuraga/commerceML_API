@@ -15,9 +15,9 @@ GIT
 
 GIT
   remote: git://github.com/sferik/rails_admin.git
-  revision: 49aafbb3defd910b7ac05b1e9ef014d55f44f8e3
+  revision: 67af62abbdba30d5993de0b3fccf740a367ab536
   specs:
-    rails_admin (0.8.1)
+    rails_admin (1.0.0.rc)
       builder (~> 3.1)
       coffee-rails (~> 4.0)
       font-awesome-rails (>= 3.0, < 5)
@@ -26,7 +26,7 @@ GIT
       jquery-ui-rails (~> 5.0)
       kaminari (~> 0.14)
       nested_form (~> 0.3)
-      rack-pjax (~> 0.7)
+      rack-pjax (>= 0.7)
       rails (>= 4.0, < 6)
       remotipart (~> 1.0)
       sass-rails (>= 4.0, < 6)
@@ -71,7 +71,7 @@ GEM
       i18n (~> 0.7)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
-    arel (7.0.0)
+    arel (7.1.0)
     builder (3.2.2)
     byebug (9.0.5)
     coffee-rails (4.2.1)
@@ -129,7 +129,7 @@ GEM
       pkg-config (~> 1.1.7)
     pg (0.18.4)
     pkg-config (1.1.7)
-    puma (3.4.0)
+    puma (3.5.0)
     rack (2.0.1)
     rack-test (0.6.3)
       rack (>= 1.0)

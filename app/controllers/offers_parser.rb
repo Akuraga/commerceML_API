@@ -109,7 +109,10 @@ module OffersParser
           end
         end
         product = Product.find_by(id_xml: proposal.at_css('Ид').text)
-        product.proposals << @new_proposal
+
+        @new_proposal.product_id = product.id
+        @new_proposal.save!
+
       end
     end
   end

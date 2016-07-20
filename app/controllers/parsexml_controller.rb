@@ -20,9 +20,9 @@ class ParsexmlController < ApplicationController
 
   require 'rest-client'
   def parse_my_doc
-    file_name = './data/from_ERP/example/import.xml'
-    file_name2 = './data/from_ERP/example/offers.xml'
-    file_name3 = './data/from_ERP/example/orders.xml'
+    file_name = './data/from_ERP/import.xml'
+    file_name2 = './data/from_ERP/offers.xml'
+    file_name3 = './data/from_ERP/orders.xml'
     parser_product_from_erp(file_name)
     parser_offers_from_erp(file_name2)
     parse_order_from_erp(file_name3)

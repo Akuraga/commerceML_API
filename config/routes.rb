@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   get '1c_exchange' => 'parsexml#exchange_1c'
   post '1c_exchange' => 'parsexml#exchange_1c'
 
-  get 'api_magento' => 'api_magento#autorization'
+  get 'api_magento' => 'api_magento#ask_from_1c'
 
   get 'site_to_erp' => 'create_csv#csv_site_to_erp'
   get 'erp_to_site' => 'create_csv#csv_erp_to_site'

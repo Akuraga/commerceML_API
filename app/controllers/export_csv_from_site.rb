@@ -58,9 +58,9 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
     #   end
     # end
     # go = true
-    @category = Array.new
-    @price = Array.new
-    @quantity = Array.new
+    @category = []
+    @price = []
+    @quantity = []
     i = -1
     j = -1
     commerce_information = CommerceInformation.find_by(name_document: "from_ERP_import", from_erp: true)

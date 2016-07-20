@@ -46,7 +46,7 @@ module CatalogParser
         end
       end
       @new_product.name         = product.at_css('Наименование').text
-
+      @new_product.in_out       = "from_ERP"
 
       #парсим ед. изм
         unit = parse_unit(product.at_css('БазоваяЕдиница'))

@@ -507,6 +507,7 @@ ActiveRecord::Schema.define(version: 20160714082943) do
     t.string   "vendorcode"
     t.string   "name"
     t.string   "description"
+    t.string   "in_out"
     t.integer  "catalog_id"
     t.integer  "unit_id"
     t.datetime "created_at",  null: false

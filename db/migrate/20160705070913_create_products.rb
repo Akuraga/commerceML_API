@@ -6,6 +6,7 @@ class CreateProducts < ActiveRecord::Migration[5.0]
       t.string :vendorcode   #артикул
       t.string :name
       t.string :description
+      t.string :in_out
       t.integer :catalog_id
       t.integer :unit_id
       t.timestamps
