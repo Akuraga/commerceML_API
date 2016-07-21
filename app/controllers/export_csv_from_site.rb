@@ -63,11 +63,11 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
     @quantity = []
     i = -1
     j = -1
-    commerce_information = CommerceInformation.find_by(name_document: "from_ERP_import", from_erp: true)
-    commerce_information.catalogs.each do |catalog|
-      catalog.products.each do |p|
+    # commerce_information = CommerceInformation.find_by(name_document: "from_ERP_import", from_erp: true)
+    # commerce_information.catalogs.each do |catalog|
 
-        #получаем Ціни інтернет-магазину  id_xml: 5590c751-e4c0-11e2-9526-00163c2d0dbf
+      Product.where(in_out: "from_ERP").each do |p|
+
         j += 1
         proposal = p.proposal
         if proposal
@@ -80,7 +80,7 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
           @quantity[j] = "0"
         end
 
-        price_type = PriceType.find_by(id_xml:"5590c751-e4c0-11e2-9526-00163c2d0dbf")
+        price_type = PriceType.find_by(id_xml:PRICE_XML_ID_TO_SITE)
         if proposal and price_type
           @price[j] = Price.find_by(proposal_id: proposal.id, price_type_id: price_type.id).price
         else
@@ -112,8 +112,7 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
           end
         end
       end
-    end
-    #5590c751-e4c0-11e2-9526-00163c2d0dbf Ціни інтернет-магазину
+
 
     h = "sku; store_view_code; attribute_set_code; product_type; categories; product_websites; name; description; short_description; weight; product_online; tax_class_name;
  visibility; price; special_price; special_price_from_date; special_price_to_date; url_key; meta_title; meta_keywords; meta_description; base_image;

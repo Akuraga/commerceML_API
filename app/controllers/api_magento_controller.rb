@@ -31,6 +31,8 @@ class ApiMagentoController < ApplicationController
         puts_log_file("log_add_product_to_magento2", "ERROR: #{error}", "Фігня в гет запиті до каталогу 'attribute-sets' маженти")
       end
 
+      product_attribute_set_old = ""
+
       Product.where(in_out: "from_ERP").each do |product|
         proposal = product.proposal
         if proposal
@@ -53,7 +55,9 @@ class ApiMagentoController < ApplicationController
           price = "0"
         end
 
-        #получаем категории товара
+        #отримуемо категорії товару
+
+        сохранение группы товара
 
         product.groups.each do |group|
           group_id = find_group(group, result_categories, product) #знаходимо найближчу групу для товару
@@ -61,40 +65,87 @@ class ApiMagentoController < ApplicationController
         attribute_set = find_attribute_set(result_attribute_set, product)
 
         #якщо знайшли атрибут сет, шукаемо атрибути та записуемо їх значення
-        if attribute_set != -1
-          begin
-            result_attribute = JSON.parse(RestClient.get "http://demo.beta.qpard.com/index.php/rest/V1/products/attribute-sets/#{attribute_set}/attributes",
-                                                             {:Authorization => "Bearer #{@token_key.to_s.gsub('"','')}", :content_type => :json, :accept => :json})
-          rescue => error
-            puts_log_file("log_add_product_to_magento2", "ERROR: #{error}", "Фігня в гет запиті до атрибутів 'attribute-sets' ID: '#{attribute_set}' маженти")
+        if attribute_set[:name] != nil
+
+          #(для прискорення) порівнюємо значення атрибут сету товару що вибирали раніше з поточним атрибут сетом товару
+          if attribute_set[:name] != product_attribute_set_old
+            begin
+              @result_attribute = JSON.parse(RestClient.get "http://demo.beta.qpard.com/index.php/rest/V1/products/attribute-sets/#{attribute_set[:id]}/attributes",
+                                                               {:Authorization => "Bearer #{@token_key.to_s.gsub('"','')}", :content_type => :json, :accept => :json})
+            rescue => error
+              puts_log_file("log_add_product_to_magento2", "ERROR: #{error}", "Фігня в гет запиті до атрибутів 'attribute-sets' ID: '#{attribute_set[:name]}' маженти")
+            end
+            product_attribute_set_old = attribute_set[:name]
           end
-
-          attr_values = find_set_attribute(result_attribute, product)
-
+          attribute_value = find_attribute(@result_attribute, product)
 
           # begin
-          #   req = RestClient.post "http://demo.beta.qpard.com/index.php/rest/V1/products",
-          #                         {
-          #                             "product":{
-          #                                 "sku": "10090-White-XL#{i}",
-          #                                 "name": "10090-White-XL#{i}",
-          #                                 "attribute_set_id": 4,
-          #                                 "price": 119,
-          #                                 "status": 1,
-          #                                 "visibility": 1,
-          #                                 "type_id": "simple" }
-          #                         }.to_json,
-          #                         {
-          #                             :Authorization => "Bearer #{result.to_s.gsub('"','')}",
-          #                             :content_type => :json,
-          #                             :accept => :json
-          #                         }
+          #  req = RestClient.get "http://demo.beta.qpard.com/index.php/rest/V1/products?searchCriteria=''",
+          #                  {:Authorization => "Bearer #{@token_key.to_s.gsub('"','')}", :content_type => :json, :accept => :json}
+          #
           # rescue => error
           #   a=2
           # end
+
+
+          begin
+            req1 = RestClient.get "http://demo.beta.qpard.com/index.php/rest/V1/products/My%20Product",
+                                 {:Authorization => "Bearer #{@token_key.to_s.gsub('"','')}", :content_type => :json, :accept => :json}
+
+          rescue => error
+            puts_log_file("log_add_product_to_magento2", "ERROR: #{error}", "")
+          end
+          a=2
+
+
+
+
+
+
+
+          attribute_bloc = []
+          attribute_value.count.times do |i|
+            if (i + 1) == attribute_value.count
+              ab = Hash.new
+              ab[:attribute_code] = attribute_value[i][:attr_name].to_s
+              ab[:value] = attribute_value[i][:attr_value].to_s
+              attribute_bloc << ab
+            end
+          end
+
+          begin
+            RestClient.post "http://demo.beta.qpard.com/index.php/rest/V1/products",
+                                  {
+                                      "product": {
+                                          "sku": product.id_xml,
+                                          "name": product.name,
+                                          "attribute_set_id": attribute_set[:id],
+                                          "price": price,
+                                          "status": 1,
+                                          "visibility": 1,
+                                          "type_id": "simple",
+                                          "extension_attributes": {
+                                              "stock_item": {
+                                                  "qty": quantity
+                                              }},
+                                          "custom_attributes": attribute_bloc
+                                      }
+                                  }.to_json,
+                                  {
+                                      :Authorization => "Bearer #{@token_key.to_s.gsub('"','')}",
+                                      :content_type => :json,
+                                      :accept => :json
+                                  }
+          rescue => error
+            puts_log_file("log_add_product_to_magento2", "ERROR: ПРОДУКТ НЕ ЗБЕРЕЖЕНО", "#{error} в POST запиті при зберіганні продукту '#{product.name}' ID: '#{product.id_xml}'")
+          end
         else
-          puts_log_file("log_add_product_to_magento2", "ERROR: ПРОДУКТ НЕ ЗБЕРЕЖЕНО'",
-                        "Продукт '#{product.name}' ID: '#{product.id_xml}' не збережено через відсутність атрибут сету")
+          requisite = Requisite.find_by(name: "ВидНоменклатуры")
+          if requisite
+            attr_set_1c = ProductRequisite.find_by(product_id: product.id, requisite_id: requisite.id)
+          end
+          puts_log_file("log_add_product_to_magento2", "ERROR: ПРОДУКТ НЕ ЗБЕРЕЖЕНО",
+                        "Продукт '#{product.name}' ID: '#{product.id_xml}' не збережено через відсутність атрибут сету '#{attr_set_1c.value}'")
         end
 
 
@@ -161,7 +212,7 @@ class ApiMagentoController < ApplicationController
           group_id_result = compare_category(result['children_data'][0], category, i, (n-1), product)
           if group_id_result == -1
             puts_log_file("log_add_product_to_magento2", "WARNING: Не знайдено групу!",
-                          "Групу '#{category[i]}' для товару'#{product.name}' ID: '#{product.id_xml}' не знайдено у magento")
+                          "Групу '#{category[i]}' для товару '#{product.name}' ID: '#{product.id_xml}' не знайдено у magento")
           else
             group_id = group_id_result
           end
@@ -173,41 +224,67 @@ class ApiMagentoController < ApplicationController
 
 
   def find_attribute_set(result_attribute_set, product)
-    attribute_set_id = -1
+    # attribute_set_id = -1
+    attribute_set = {}
     i = 0
     requisite = Requisite.find_by(name: "ВидНоменклатуры")
     if requisite
       attr_set_1c = ProductRequisite.find_by(product_id: product.id, requisite_id: requisite.id)
       while i < result_attribute_set['total_count'] do
         if result_attribute_set['items'][i]['attribute_set_name'] == attr_set_1c.value
-          attribute_set_id = result_attribute_set['items'][i]['attribute_set_id']
+          attribute_set = {:id => result_attribute_set['items'][i]['attribute_set_id'],
+                         :name => result_attribute_set['items'][i]['attribute_set_name']}
           i = result_attribute_set['total_count']
         end
         i +=1
       end
     end
-    return attribute_set_id
+    return attribute_set
   end
 
-  def find_set_attribute(result_attribute, product)
-    attribute_value = [{}]
-    attribute_is_set = false
-    product.properties.each do |propertie|
-      unless attribute_is_set
-        puts_log_file("log_add_product_to_magento2", "WARNING: Не знайдено групу!",
-                      "Групу '#{category[i]}' для товару'#{product.name}' ID: '#{product.id_xml}' не знайдено у magento")
-      end
-      result_attribute.count.times do |i|
-        if ATTRIBUTE_MAGENTO_1C.include?(result_attribute[i]['attribute_code'])
-          product_propertie = ProductProperty.find_by(product_id: product.id, property_id: propertie.id)
-          handbook = Handbook.find_by(id_xml: product_propertie.value)
-          if handbook
-            attribute_value[i] = {:attr_id => result_attribute[i]['attribute_id'], :attr_value => handbook.value}
-            attribute_is_set = true
-          end
-        else
+  def find_attribute(result_attribute, product)
+    attribute_value = []
+    n=0
+    @not_find_in_constant = {:property_name => nil}
+    @not_find_in_magento = {:attr_name => nil}
+    product.properties.each do |property|
 
+      @not_find_in_constant[:property_name] = property.name
+
+      ATTRIBUTE_1C_MAGENTO.count.times do |j|
+        if ATTRIBUTE_1C_MAGENTO[j][:in_1c].include?(property.name)
+          @not_find_in_constant[:property_name] = nil
+          @not_find_in_magento[:attr_name] = ATTRIBUTE_1C_MAGENTO[j][:in_1c]
+
+          result_attribute.count.times do |i|
+            if ATTRIBUTE_1C_MAGENTO[j][:in_magento].include?(result_attribute[i]['attribute_code'])
+              @not_find_in_magento[:attr_name] = nil
+              product_propertie = ProductProperty.find_by(product_id: product.id, property_id: property.id)
+              handbook = Handbook.find_by(id_xml: product_propertie.value)
+              if handbook
+                attribute_value << {
+                    :attr_id => result_attribute[i]['attribute_id'],
+                    :attr_name => result_attribute[i]['attribute_code'],
+                    :attr_value => handbook.value}
+                # attribute_value[n] = {:attr_id => result_attribute[i]['attribute_id'], :attr_value => handbook.value}
+                # n +=1
+              end
+              break
+            else
+
+            end
+          end
+          break
         end
+      end
+      if @not_find_in_constant[:property_name]
+        puts_log_file("log_add_product_to_magento2", "WARNING: Не знайдено опис атрибуту!",
+                      "Арибут '#{@not_find_in_constant[:property_name]}'  не знайдено у описі атрибутів ATTRIBUTE_1C_MAGENTO")
+        @not_find_in_constant[:property_name] = nil
+      elsif @not_find_in_magento[:attr_name]
+        puts_log_file("log_add_product_to_magento2", "WARNING: Не знайдено атрибут!",
+                      "Арибут 1C '#{@not_find_in_magento[:attr_name]}' не знайдено у списку атрибутів magento. Для товару '#{product.name}' ID: '#{product.id_xml}'")
+        @not_find_in_magento[:attr_name] = nil
       end
     end
     return attribute_value
