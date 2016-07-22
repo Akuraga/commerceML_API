@@ -1,5 +1,5 @@
 #ціна яка вивантажуеться на сайт (ТипЦены/Ид з xml файлу 1С)
-  PRICE_XML_ID_TO_SITE = "e63f77ba-de63-11e2-a790-00155d01fb00"
+  PRICE_XML_ID_TO_SITE = "5590c751-e4c0-11e2-9526-00163c2d0dbf"
 #Опис <ЗначениеРеквизита> <Наименование>ОписаниеВФорматеHTML</Наименование>
   PRODUCT_DESCRIPTIONS = "ОписаниеВФорматеHTML"
 #Username адмінки маженти
@@ -13,7 +13,7 @@
 #співвідношення атрибутів 1C з тими що є в маженті
   ATTRIBUTE_1C_MAGENTO = [
       {:in_1c => 'Автор',                      :in_magento => 'avtor'},
-      {:in_1c => 'Видавництво',                :in_magento => ''},
+      {:in_1c => 'Видавництво',                :in_magento => 'vidavnictvo'},
       {:in_1c => 'Жанр',                       :in_magento => ''},
       {:in_1c => 'Палітурка',                  :in_magento => ''},
       {:in_1c => 'Мова',                       :in_magento => ''},

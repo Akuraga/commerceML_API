@@ -11,7 +11,7 @@ class CreateCsvController < ApplicationController
     import_products(file_products)
     import_orders(file_orders)
     import_customers(file_customers)
-    render text: "all ok csv_site_to_erp"
+    render plain: "all ok csv_site_to_erp"
   end
 
 
@@ -23,7 +23,7 @@ class CreateCsvController < ApplicationController
     export_products(file_products)
     #export_orders(file_orders)
     #export_customers(file_customers)
-    render text: "all ok csv_erp_to_site"
+    render plain: "all ok csv_erp_to_site"
   end
 
 end

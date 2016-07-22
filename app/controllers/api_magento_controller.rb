@@ -88,14 +88,14 @@ class ApiMagentoController < ApplicationController
           # end
 
 
-          begin
-            req1 = RestClient.get "http://demo.beta.qpard.com/index.php/rest/V1/products/My%20Product",
-                                 {:Authorization => "Bearer #{@token_key.to_s.gsub('"','')}", :content_type => :json, :accept => :json}
+          # begin
+          #   req1 = RestClient.get "http://demo.beta.qpard.com/index.php/rest/V1/products/My%20Product",
+          #                        {:Authorization => "Bearer #{@token_key.to_s.gsub('"','')}", :content_type => :json, :accept => :json}
+          #
+          # rescue => error
+          #   puts_log_file("log_add_product_to_magento2", "ERROR: #{error}", "")
+          # end
 
-          rescue => error
-            puts_log_file("log_add_product_to_magento2", "ERROR: #{error}", "")
-          end
-          a=2
 
 
 
@@ -244,7 +244,6 @@ class ApiMagentoController < ApplicationController
 
   def find_attribute(result_attribute, product)
     attribute_value = []
-    n=0
     @not_find_in_constant = {:property_name => nil}
     @not_find_in_magento = {:attr_name => nil}
     product.properties.each do |property|
@@ -266,8 +265,6 @@ class ApiMagentoController < ApplicationController
                     :attr_id => result_attribute[i]['attribute_id'],
                     :attr_name => result_attribute[i]['attribute_code'],
                     :attr_value => handbook.value}
-                # attribute_value[n] = {:attr_id => result_attribute[i]['attribute_id'], :attr_value => handbook.value}
-                # n +=1
               end
               break
             else

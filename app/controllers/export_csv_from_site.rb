@@ -65,8 +65,8 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
     j = -1
     # commerce_information = CommerceInformation.find_by(name_document: "from_ERP_import", from_erp: true)
     # commerce_information.catalogs.each do |catalog|
-
-      Product.where(in_out: "from_ERP").each do |p|
+    products = Product.where(in_out: "from_ERP").sort
+      products.each do |p|
 
         j += 1
         proposal = p.proposal
@@ -80,9 +80,13 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
           @quantity[j] = "0"
         end
 
-        price_type = PriceType.find_by(id_xml:PRICE_XML_ID_TO_SITE)
+        price_type = PriceType.find_by(id_xml: PRICE_XML_ID_TO_SITE)
         if proposal and price_type
-          @price[j] = Price.find_by(proposal_id: proposal.id, price_type_id: price_type.id).price
+          begin
+            @price[j] = Price.find_by(proposal_id: proposal.id, price_type_id: price_type.id).price
+          rescue
+            @price[j] = "0"
+          end
         else
           @price[j] = "0"
         end
@@ -126,8 +130,11 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
  bundle_values; associated_skus"
 
     h = h.gsub("\n","").split('; ')
-
+    @product_duplicate_url_key = []
+    @n = -1
     i = -1
+    next_product_duplicate_url_key = true
+
     CSV.open( file, 'w') do |writer|
       writer << [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15],
                  h[16], h[17], h[18], h[19], h[20], h[21], h[22], h[23], h[24], h[25], h[26], h[27], h[28], h[29],
@@ -136,8 +143,9 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
                  h[58], h[59], h[60], h[61], h[62], h[63], h[64], h[65], h[66], h[67], h[68], h[69], h[70], h[71],
                  h[72], h[73], h[74], h[75], h[76], h[77], h[78], h[79], h[80]]
       #проверить наличие нескольких каталогов в одной файле
-      commerce_information.catalogs.each do |catalog|
-        catalog.products.each do |p|
+      # commerce_information.catalogs.each do |catalog|
+        products.each do |p|
+          url_number = 0
           i += 1
           requisite = Requisite.find_by(name: 'Вес')
           if requisite
@@ -146,22 +154,126 @@ reward_warning_notification;rp_token;rp_token_created_at;store_id;suffix;taxvat;
               product_weight = product_weight.value
             end
           end                                         #@category[i]
-          if p.id_xml != "7941" and p.id_xml != "7959"
-            writer << [p.id_xml, "", "Default", "simple", "", "base", p.name, p.description, "", product_weight, #10
-                       "1", "", "Catalog, Search", @price[i], "", "", "", "", "", "", "", "#{p.product_images.first.link_image}", "", "", "", "", "", "", "", p.created_at, #30
-                       p.updated_at, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", @quantity[i], "", "", #50
-                       "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", #70
-                       "", "", "", "", "", "", "", "", "", "", ""] #81
+          if p.vendorcode == "0" or p.vendorcode == "" or p.vendorcode == nil
+            sku = p.name
+          else
+            sku = p.vendorcode
           end
 
+          #генерую унікальний url key для маженти
+          name_product_count = Product.where(name: p.name)
+          if name_product_count.count > 1
+            @n += 1
+            @product_duplicate_url_key.count.times do |number|
+              if @product_duplicate_url_key[number][:name] == p.name
+                url_number = @product_duplicate_url_key[number][:j] + 1
+                @product_duplicate_url_key[number] = {:name => p.name, :j => url_number}
+                next_product_duplicate_url_key = false
+              end
+            end
+            url_key = p.name + "/#{url_number}"
+            url_key
+            if next_product_duplicate_url_key
+              @product_duplicate_url_key[@n] = {:name => p.name, :j => url_number}
+            else
+              @n -= 1
+              next_product_duplicate_url_key = true
+            end
+          else
+            url_key = p.name
+          end
+          url_key = url_key.gsub(' ','-').gsub('"','').gsub("'",'').gsub('.','').mb_chars.downcase!
 
-          #Catalog, Search
-          # writer << [p.id_xml, p.name, "2", @category[i], p.description, "",
-          #            product_weight, "Taxable Goods", "", "", "simple"]
-        end
+          requisite = Requisite.find_by(name: "ВидНоменклатуры")
+          if requisite
+            attr_set = ProductRequisite.find_by(product_id: p.id, requisite_id: requisite.id).value
+          end
+
+          product_attribute = find_attribute(p)
+
+
+          writer << [sku, "", attr_set, "simple", @category[i], "base", p.name, p.description, "", product_weight, #10
+                     "1", "Taxable Goods", "Catalog, Search", @price[i], "", "", "", url_key, "", "", "", "#{p.product_images.first.link_image}", "", "", "", "", "", "", "", "", #30
+                     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", product_attribute, @quantity[i], "", "", #50
+                     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", #70
+                     "", "", "", "", "", "", "", "", "", "", ""] #81
+        # end
+
       end
     end
   end
+
+
+  def find_attribute_set(result_attribute_set, product)
+    # attribute_set_id = -1
+    i = 0
+    requisite = Requisite.find_by(name: "ВидНоменклатуры")
+    if requisite
+      attr_set_1c = ProductRequisite.find_by(product_id: product.id, requisite_id: requisite.id)
+      while i < result_attribute_set['total_count'] do
+        if result_attribute_set['items'][i]['attribute_set_name'] == attr_set_1c.value
+          attribute_set = {:id => result_attribute_set['items'][i]['attribute_set_id'],
+                           :name => result_attribute_set['items'][i]['attribute_set_name']}
+          i = result_attribute_set['total_count']
+        end
+        i +=1
+      end
+    end
+    return attribute_set
+  end
+
+
+
+
+  def find_attribute(product)
+    attribute_value = ""
+    @not_find_in_constant = {:property_name => nil}
+    product.properties.each do |property|
+
+      @not_find_in_constant[:property_name] = property.name
+
+      ATTRIBUTE_1C_MAGENTO.count.times do |j|
+        if ATTRIBUTE_1C_MAGENTO[j][:in_1c].include?(property.name)
+          @not_find_in_constant[:property_name] = nil
+          if ATTRIBUTE_1C_MAGENTO[j][:in_magento] != ""
+            product_propertie = ProductProperty.find_by(product_id: product.id, property_id: property.id)
+             handbook = Handbook.find_by(id_xml: product_propertie.value)
+             if handbook
+               if attribute_value != ""
+                 attribute_value += ",#{ATTRIBUTE_1C_MAGENTO[j][:in_magento]}=#{handbook.value}"
+               else
+                 attribute_value += "#{ATTRIBUTE_1C_MAGENTO[j][:in_magento]}=#{handbook.value}"
+               end
+
+            end
+          end
+          # result_attribute.count.times do |i|
+          #   if ATTRIBUTE_1C_MAGENTO[j][:in_magento].include?(result_attribute[i]['attribute_code'])
+          #     @not_find_in_magento[:attr_name] = nil
+          #     product_propertie = ProductProperty.find_by(product_id: product.id, property_id: property.id)
+          #     handbook = Handbook.find_by(id_xml: product_propertie.value)
+          #     if handbook
+          #       attribute_value << {
+          #           :attr_id => result_attribute[i]['attribute_id'],
+          #           :attr_name => result_attribute[i]['attribute_code'],
+          #           :attr_value => handbook.value}
+              # end
+            #   break
+            # end
+          # end
+          break
+        end
+      end
+      if @not_find_in_constant[:property_name]
+        puts_log_file("log_CSV_export_product_to_magento2", "WARNING: Не знайдено опис атрибуту!",
+                      "Арибут '#{@not_find_in_constant[:property_name]}'  не знайдено у описі атрибутів ATTRIBUTE_1C_MAGENTO")
+        @not_find_in_constant[:property_name] = nil
+      end
+    end
+    return attribute_value
+  end
+
+
 
 
 end
